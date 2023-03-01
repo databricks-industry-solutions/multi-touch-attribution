@@ -182,7 +182,7 @@ _ = spark.sql('''
 # MAGIC 
 # MAGIC * In practice, Z-ordering is most suitable for high-cardinality columns that you frequently want to filter on.
 # MAGIC 
-# MAGIC * Please note that the data set we are using here is relatively small and Z-ordering is likely unncessary. It has been included, however, for illustration purposes.
+# MAGIC * Please note that the data set we are using here is relatively small and Z-ordering is likely unnecessary. It has been included, however, for illustration purposes.
 
 # COMMAND ----------
 
@@ -293,7 +293,7 @@ sns.catplot(x='channel',y='attribution_percent',hue='attribution_model',data=att
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ##### Example 2: Propogate updates made to the gold_user_journey table to the gold_attribution table
+# MAGIC ##### Example 2: Propagate updates made to the gold_user_journey table to the gold_attribution table
 
 # COMMAND ----------
 

@@ -17,7 +17,7 @@
 # MAGIC ### In this notebook you:
 # MAGIC * Use `Databricks Autoloader` to import the ad impression and conversion data generated in the notebook `01_intro`.
 # MAGIC * Write the data out in `Delta` format.
-# MAGIC * Create a database and table for easy access and querability.
+# MAGIC * Create a database and table for easy access and queryability.
 
 # COMMAND ----------
 
@@ -135,7 +135,7 @@ raw_data_df = raw_data_df.withColumn("time", to_timestamp(col("time"),"yyyy-MM-d
 # MAGIC %md
 # MAGIC ## Step 3: Write Data to Delta Lake
 # MAGIC 
-# MAGIC In this section of the solution accelerator, we write our data out to [Delta Lake](https://delta.io/) and then create a table (and database) for easy access and querability.
+# MAGIC In this section of the solution accelerator, we write our data out to [Delta Lake](https://delta.io/) and then create a table (and database) for easy access and queryability.
 # MAGIC 
 # MAGIC * Delta Lake is an open-source project that enables building a **Lakehouse architecture** on top of existing storage systems such as S3, ADLS, GCS, and HDFS.
 # MAGIC    * Information on the **Lakehouse Architecture** can be found in this [paper](http://cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf) that was presented at [CIDR 2021](http://cidrdb.org/cidr2021/index.html) and in this [video](https://www.youtube.com/watch?v=RU2dXoVU8hY)
