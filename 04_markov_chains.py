@@ -33,7 +33,7 @@
 # MAGIC * Heuristic-based attribution methods like first-touch, last-touch, and linear are relatively easy to implement but are less accurate than data-driven methods. With marketing dollars at stake, data-driven methods are highly recommended.
 # MAGIC 
 # MAGIC * There are three steps to take when using Markov Chains to calculate attribution:
-# MAGIC   * Step 1: Construct a transition probablity matrix
+# MAGIC   * Step 1: Construct a transition probability matrix
 # MAGIC   * Step 2: Calculate the total conversion probability
 # MAGIC   * Step 3: Use the removal effect to calculate attribution
 # MAGIC   
@@ -41,7 +41,7 @@
 # MAGIC 
 # MAGIC **An Example**
 # MAGIC 
-# MAGIC In the image below, we have a transition probability graph that shows the probabilty of going from one state to another state. In the context of a customer journey, states can be non-terminal (viewing an impression on a given channel) or terminal (conversion, no conversion).
+# MAGIC In the image below, we have a transition probability graph that shows the probability of going from one state to another state. In the context of a customer journey, states can be non-terminal (viewing an impression on a given channel) or terminal (conversion, no conversion).
 # MAGIC 
 # MAGIC <div style="text-align: left">
 # MAGIC   <img src="https://cme-solution-accelerators-images.s3.us-west-2.amazonaws.com/multi-touch-attribution/mta-dag-1.png"; width="60%">
@@ -61,7 +61,7 @@
 # MAGIC 
 # MAGIC ```P(Conversion) = (0.2 X 0.8) + (0.2 X 0.2 X 0.1) + (0.8 X 0.6) + (0.8 X 0.4 X 0.8) + (0.8 X 0.4 X 0.2 X 0.1)  = 0.90```
 # MAGIC 
-# MAGIC Now, let's calculate the removal effect for one of our channels: Facebook/Social. For this, we will set the conversion for Facebook/Social to 0% and then recalculate the total conversion probabilty. Now we have `0.48`.
+# MAGIC Now, let's calculate the removal effect for one of our channels: Facebook/Social. For this, we will set the conversion for Facebook/Social to 0% and then recalculate the total conversion probability. Now we have `0.48`.
 # MAGIC 
 # MAGIC ```P(Conversion) = (0.2 X 0.0) + (0.2 X 0.0 X 0.1) + (0.8 X 0.6) + (0.8 X 0.4 X 0) +(0.8 X 0.4 X 0.0 X 0.1)  = 0.48```
 # MAGIC 
@@ -85,7 +85,7 @@
 # MAGIC 
 # MAGIC In this step, we will:
 # MAGIC 1. Import libraries
-# MAGIC 2. Run the utils notebook to gain acces to the get_params function
+# MAGIC 2. Run the utils notebook to gain access to the get_params function
 # MAGIC 3. get_params and store the relevant values in variables
 # MAGIC 4. Set the current database so that it doesn't need to be manually specified each time it's used
 
@@ -141,7 +141,7 @@ _ = spark.sql("use {}".format(database_name))
 # MAGIC %md
 # MAGIC ## Step 2: Construct the Transition Probability Matrix
 # MAGIC 
-# MAGIC As discussed above, the transition probability matrix contains the probablities associated with moving from one state to another state. This is calculated using the data from all customer journeys.
+# MAGIC As discussed above, the transition probability matrix contains the probabilities associated with moving from one state to another state. This is calculated using the data from all customer journeys.
 # MAGIC 
 # MAGIC In this step, we will:
 # MAGIC 1. Define a user-defined function (UDF), `get_transition_array`, that takes a customer journey and enumerates each of the corresponding channel transitions

@@ -18,7 +18,7 @@
 # MAGIC 
 # MAGIC * Broadly speaking, heuristic methods are rule-based and consist of both `single-touch` and `multi-touch` approaches. Single-touch methods, such as `first-touch` and `last-touch`, assign credit to the first channel, or the last channel, associated with a conversion. Multi-touch methods, such as `linear` and `time-decay`, assign credit to multiple channels associated with a conversion. In the case of linear, credit is assigned uniformly across all channels, whereas for time-decay, an increasing amount of credit is assigned to the channels that appear closer in time to the conversion event.
 # MAGIC 
-# MAGIC * In contrast to heuristic methods, data-driven methods determine assignment using probabilites and statistics. Examples of data-driven methods include `Markov Chains` and `SHAP`. In this series of notebooks, we cover the use of Markov Chains and include a comparison to a few heuristic methods.
+# MAGIC * In contrast to heuristic methods, data-driven methods determine assignment using probabilities and statistics. Examples of data-driven methods include `Markov Chains` and `SHAP`. In this series of notebooks, we cover the use of Markov Chains and include a comparison to a few heuristic methods.
 
 # COMMAND ----------
 
@@ -78,7 +78,7 @@
 # MAGIC 
 # MAGIC * In the following sections, you will generate this synthetic dataset and then process it using Structured Streaming. You will then apply additional transformations so that it is suitable to use with Markov Chains.
 # MAGIC 
-# MAGIC * **Note:** Default settings are used to generate this data set. Aftering working through this series of notebooks for the first time, you may want to customize these settings for additional exploration. Please note that if you do so, commentary in the notebooks may not line up with the newly generated data.
+# MAGIC * **Note:** Default settings are used to generate this data set. After working through this series of notebooks for the first time, you may want to customize these settings for additional exploration. Please note that if you do so, commentary in the notebooks may not line up with the newly generated data.
 
 # COMMAND ----------
 

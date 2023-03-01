@@ -196,11 +196,11 @@ display(ad_spend_df)
 
 # COMMAND ----------
 
-base_converion_rate_pd = spark.table("base_conversion_rate").toPandas()
+base_conversion_rate_pd = spark.table("base_conversion_rate").toPandas()
 
 pie, ax = plt.subplots(figsize=[20,9])
-labels = base_converion_rate_pd['interaction_type']
-plt.pie(x=base_converion_rate_pd['count'], autopct="%.1f%%", explode=[0.05]*2, labels=labels, pctdistance=0.5)
+labels = base_conversion_rate_pd['interaction_type']
+plt.pie(x=base_conversion_rate_pd['count'], autopct="%.1f%%", explode=[0.05]*2, labels=labels, pctdistance=0.5)
 plt.title("Base Conversion Rate");
 
 # COMMAND ----------
@@ -292,14 +292,14 @@ plt.title("Channel Performance");
 cpa_summary_pd = spark.table("cpa_summary").toPandas()
 
 pt = sns.catplot(x='channel', y='CPA_in_Dollars',hue='attribution_model',data=cpa_summary_pd, kind='bar', aspect=4, ci=None)
-plt.title("Cost of Aquisition by Channel")
+plt.title("Cost of Acquisition by Channel")
 pt.fig.set_figwidth(20)
 pt.fig.set_figheight(9)
 
 plt.tick_params(labelsize=15)
 plt.ylabel("CPA in $")
 plt.xlabel("Channels")
-plt.title("Channel Cost per Aquisition");
+plt.title("Channel Cost per Acquisition");
 
 # COMMAND ----------
 
