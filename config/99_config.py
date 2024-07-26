@@ -1,5 +1,6 @@
 # Databricks notebook source
-user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user') # user name associated with your account
+# user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user') # user name associated with your account
+user = 'chad.lorenz@amperity.com'
 user_sql = user.split('@')[0].replace('.', '_')
 
 # COMMAND ----------
