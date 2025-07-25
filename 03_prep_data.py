@@ -13,7 +13,7 @@
 
 # MAGIC %md
 # MAGIC ## Overview
-# MAGIC 
+# MAGIC
 # MAGIC ### In this notebook you:
 # MAGIC * Create a gold_user_journey table
 # MAGIC * Optimize the gold_user_journey table using z-ordering
@@ -26,7 +26,7 @@
 
 # MAGIC %md
 # MAGIC ## Step 1: Configure the Environment
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC   1. Import libraries
 # MAGIC   2. Run `utils` notebook to gain access to the functions `get_params`
@@ -58,7 +58,7 @@ import seaborn as sns
 
 # MAGIC %md
 # MAGIC ##### Step 1.3: `get_params` and store values in variables
-# MAGIC 
+# MAGIC
 # MAGIC * Three of the parameters returned by `get_params` are used in this notebook. For convenience, we will store the values for these parameters in new variables. 
 # MAGIC   * **database_name:** the name of the database created in notebook `02_load_data`. The default value can be overridden in the notebook `99_config`
 # MAGIC   * **gold_user_journey_tbl_path:** the path used in `03_prep_data` to write out gold-level user journey data in delta format.
@@ -67,6 +67,7 @@ import seaborn as sns
 # COMMAND ----------
 
 params = get_params()
+catalog_name = params['catalog_name']
 database_name = params['database_name']
 gold_user_journey_tbl_path = params['gold_user_journey_tbl_path']
 gold_attribution_tbl_path = params['gold_attribution_tbl_path']
@@ -79,13 +80,14 @@ gold_attribution_tbl_path = params['gold_attribution_tbl_path']
 
 # COMMAND ----------
 
-_ = spark.sql("use {}".format(database_name))
+_ = spark.sql("use catalog {}".format(catalog_name))
+_ = spark.sql("use schema {}".format(database_name))
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Step 2: Create a Gold-level User Journey Table
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC 1. Create a user journey temporary view
 # MAGIC 2. View the user journey data
@@ -101,7 +103,7 @@ _ = spark.sql("use {}".format(database_name))
 # MAGIC   * `first_interaction`: the first channel that an impression for a given campaign was delivered on for a given user.
 # MAGIC   * `last_interaction`: the last channel that an impression for a given campaign was delivered on for a given user.
 # MAGIC   * `conversion`: boolean indicating whether the given user has converted (1) or not (0).
-# MAGIC 
+# MAGIC
 # MAGIC * This query is used to create a temporary view. The temporary view will be used in `Step 2.3` to create a table.
 
 # COMMAND ----------
@@ -162,12 +164,10 @@ _ = spark.sql("use {}".format(database_name))
 
 # COMMAND ----------
 
-_ = spark.sql('''
-  CREATE TABLE IF NOT EXISTS `{}`.gold_user_journey
-  USING DELTA 
-  LOCATION '{}'
-  AS SELECT * from user_journey_view
-  '''.format(database_name, gold_user_journey_tbl_path))
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS gold_user_journey
+# MAGIC   USING DELTA 
+# MAGIC   AS SELECT * from user_journey_view
 
 # COMMAND ----------
 
@@ -179,9 +179,9 @@ _ = spark.sql('''
 # MAGIC %md
 # MAGIC ## Step 3: Optimize the gold_user_journey table
 # MAGIC * [Z-Ordering](https://docs.databricks.com/delta/optimizations/file-mgmt.html#z-ordering-multi-dimensional-clustering) is a technique used to co-locate related information into the same set of files. This co-locality is automatically used by Delta Lake's data-skipping algorithms to dramatically reduce the amount of data that needs to be read. The less data that needs to be read, the quicker that query results are returned.
-# MAGIC 
+# MAGIC
 # MAGIC * In practice, Z-ordering is most suitable for high-cardinality columns that you frequently want to filter on.
-# MAGIC 
+# MAGIC
 # MAGIC * Please note that the data set we are using here is relatively small and Z-ordering is likely unnecessary. It has been included, however, for illustration purposes.
 
 # COMMAND ----------
@@ -193,14 +193,14 @@ _ = spark.sql('''
 
 # MAGIC %md
 # MAGIC ## Step 4: Create gold-level attribution summary table
-# MAGIC 
+# MAGIC
 # MAGIC In the table, `gold_user_journey`, that we just created in the previous step, we captured the values for `first_interaction` and `last_interaction` in their own respective columns. With this data now in place, let's take a look at attribution using the heuristic methods `first-touch` and `last-touch`. 
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC 1. Create a temporary view for first-touch and last-touch attribution metrics
 # MAGIC 2. Use the temporary view to create the gold_attribution table
 # MAGIC 3. Use the gold_attribution table to view first touch vs. last touch by channel
-# MAGIC 
+# MAGIC
 # MAGIC After we build our Markov model in the next notebook, `04_markov_chains`, we will then take a look at how attribution using a data-driven method compares to these heuristic methods.
 
 # COMMAND ----------
@@ -241,12 +241,11 @@ _ = spark.sql('''
 
 # COMMAND ----------
 
-_ = spark.sql('''
-CREATE TABLE IF NOT EXISTS gold_attribution
-USING DELTA
-LOCATION '{}'
-AS
-SELECT * FROM attribution_view'''.format(gold_attribution_tbl_path))
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS gold_attribution
+# MAGIC USING DELTA
+# MAGIC AS
+# MAGIC SELECT * FROM attribution_view
 
 # COMMAND ----------
 
@@ -269,7 +268,7 @@ sns.catplot(x='channel',y='attribution_percent',hue='attribution_model',data=att
 
 # MAGIC %md
 # MAGIC ## Appendix: Production
-# MAGIC 
+# MAGIC
 # MAGIC In this appendix, we will:
 # MAGIC * Demonstrate that Delta Lake brings ACID transaction and full DML support to data lakes (e.g. delete, update, merge into)
 # MAGIC * Demonstrate how auditing and governance is enabled by Delta Lake
@@ -337,14 +336,14 @@ sns.catplot(x='channel',y='attribution_percent',hue='attribution_model',data=att
 
 # MAGIC %md
 # MAGIC ## Next Steps
-# MAGIC 
+# MAGIC
 # MAGIC * Create Markov Chain Attribution Model
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC Copyright Databricks, Inc. [2021]. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source).  All included or referenced third party libraries are subject to the licenses set forth below.
-# MAGIC 
+# MAGIC
 # MAGIC |Library Name|Library license | Library License URL | Library Source URL |
 # MAGIC |---|---|---|---|
 # MAGIC |Matplotlib|Python Software Foundation (PSF) License |https://matplotlib.org/stable/users/license.html|https://github.com/matplotlib/matplotlib|

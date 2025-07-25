@@ -13,20 +13,20 @@
 
 # MAGIC %md
 # MAGIC ## Overview
-# MAGIC 
+# MAGIC
 # MAGIC Behind the growth of every consumer-facing product is the acquisition and retention of an engaged user base. When it comes to acquisition, the goal is to attract high quality users as cost effectively as possible. With marketing dollars dispersed across a wide array of campaigns, channels, and creatives, however, measuring effectiveness is a challenge. In other words, it's difficult to know how to assign credit where credit is due. Enter multi-touch attribution. With multi-touch attribution, credit can be assigned in a variety of ways, but at a high-level, it's typically done using one of two methods: `heuristic` or `data-driven`.
-# MAGIC 
+# MAGIC
 # MAGIC * Broadly speaking, heuristic methods are rule-based and consist of both `single-touch` and `multi-touch` approaches. Single-touch methods, such as `first-touch` and `last-touch`, assign credit to the first channel, or the last channel, associated with a conversion. Multi-touch methods, such as `linear` and `time-decay`, assign credit to multiple channels associated with a conversion. In the case of linear, credit is assigned uniformly across all channels, whereas for time-decay, an increasing amount of credit is assigned to the channels that appear closer in time to the conversion event.
-# MAGIC 
+# MAGIC
 # MAGIC * In contrast to heuristic methods, data-driven methods determine assignment using probabilities and statistics. Examples of data-driven methods include `Markov Chains` and `SHAP`. In this series of notebooks, we cover the use of Markov Chains and include a comparison to a few heuristic methods.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## About This Series of Notebooks
-# MAGIC 
+# MAGIC
 # MAGIC * This series of notebooks is intended to help you use multi-touch attribution to optimize your marketing spend.
-# MAGIC 
+# MAGIC
 # MAGIC * In support of this goal, we will:
 # MAGIC  * Generate synthetic ad impression and conversion data.
 # MAGIC  * Create a streaming pipeline for processing ad impression and conversion data in near real-time.
@@ -75,16 +75,16 @@
 # MAGIC       </tr>
 # MAGIC    </tbody>
 # MAGIC </table>
-# MAGIC 
+# MAGIC
 # MAGIC * In the following sections, you will generate this synthetic dataset and then process it using Structured Streaming. You will then apply additional transformations so that it is suitable to use with Markov Chains.
-# MAGIC 
+# MAGIC
 # MAGIC * **Note:** Default settings are used to generate this data set. After working through this series of notebooks for the first time, you may want to customize these settings for additional exploration. Please note that if you do so, commentary in the notebooks may not line up with the newly generated data.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Step 1: Configure the Environment
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC   1. Import libraries
 # MAGIC   2. Run the `99_utils` notebook to gain access to the function `get_params`
@@ -151,7 +151,7 @@ raw_data_path = params['raw_data_path']
 
 # MAGIC %md
 # MAGIC ## Step 2: Generate the Data
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC   1. Define the functions that will be used to generate the synthetic data
 # MAGIC   2. Call `data_gen` to generate the synthetic data
@@ -255,6 +255,11 @@ display(spark.read.format('csv').option('header','true').load(raw_data_path))
 
 # COMMAND ----------
 
+generated_data = spark.read.format('csv').option('header','true').load(raw_data_path)
+display(generated_data.groupBy('interaction','channel').agg({'conversion':'sum'}))
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Next Steps
 # MAGIC * In the next notebook, we will load the data we generated here into [Delta](https://docs.databricks.com/delta/delta-intro.html) tables.
@@ -263,7 +268,7 @@ display(spark.read.format('csv').option('header','true').load(raw_data_path))
 
 # MAGIC %md
 # MAGIC Copyright Databricks, Inc. [2021]. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source).  All included or referenced third party libraries are subject to the licenses set forth below.
-# MAGIC 
+# MAGIC
 # MAGIC |Library Name|Library license | Library License URL | Library Source URL |
 # MAGIC |---|---|---|---|
 # MAGIC |Matplotlib|Python Software Foundation (PSF) License |https://matplotlib.org/stable/users/license.html|https://github.com/matplotlib/matplotlib|
