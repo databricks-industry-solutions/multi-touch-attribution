@@ -12,7 +12,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## Overview
 # MAGIC ### In this notebook you:
 # MAGIC * Review how markov chain attribution models work
@@ -31,24 +31,24 @@
 # MAGIC %md
 # MAGIC **Overview**
 # MAGIC * Heuristic-based attribution methods like first-touch, last-touch, and linear are relatively easy to implement but are less accurate than data-driven methods. With marketing dollars at stake, data-driven methods are highly recommended.
-# MAGIC 
+# MAGIC
 # MAGIC * There are three steps to take when using Markov Chains to calculate attribution:
 # MAGIC   * Step 1: Construct a transition probability matrix
 # MAGIC   * Step 2: Calculate the total conversion probability
 # MAGIC   * Step 3: Use the removal effect to calculate attribution
 # MAGIC   
 # MAGIC * As the name suggests, a transition probability matrix is a matrix that contains the probabilities associated with moving from one state to another state. This is calculated using the data from all available customer journeys. With this matrix in place, we can then easily calculate the total conversion probability, which represents, on average, the likelihood that a given user will experience a conversion event. Lastly, we use the total conversion probability as an input for calculating the removal effect for each channel. The way that the removal effect is calculated is best illustrated with an example.
-# MAGIC 
+# MAGIC
 # MAGIC **An Example**
-# MAGIC 
+# MAGIC
 # MAGIC In the image below, we have a transition probability graph that shows the probability of going from one state to another state. In the context of a customer journey, states can be non-terminal (viewing an impression on a given channel) or terminal (conversion, no conversion).
-# MAGIC 
+# MAGIC
 # MAGIC <div style="text-align: left">
 # MAGIC   <img src="https://cme-solution-accelerators-images.s3.us-west-2.amazonaws.com/multi-touch-attribution/mta-dag-1.png"; width="60%">
 # MAGIC </div>
-# MAGIC 
+# MAGIC
 # MAGIC This image, which is simply a visual representation of a transition probability matrix, can be used to calculate the total conversion probability. The total conversion probability can be calculated by summing the probability of every path that leads to a conversion. For example, in the image above, we have 5 paths that lead to conversion. The paths and conversion probabilities are: 
-# MAGIC 
+# MAGIC
 # MAGIC | Path | Conversion Probability |
 # MAGIC |---|---|
 # MAGIC | State --> Facebook --> Conversion| 0.2 x 0.8|
@@ -56,33 +56,33 @@
 # MAGIC | Start --> Google Display / Search --> Conversion | 0.8 x 0.6 | 
 # MAGIC | Start --> Google Display / Search --> Facebook / Social --> Conversion | 0.8 x 0.4 x 0.8 |
 # MAGIC | Start --> Google Display / Search --> Facebook / Social -- Email --> Conversion | 0.8 x 0.4 x 0.2 x 0.1 |
-# MAGIC 
+# MAGIC
 # MAGIC Therefore, the total probability of conversion is `0.90`:
-# MAGIC 
+# MAGIC
 # MAGIC ```P(Conversion) = (0.2 X 0.8) + (0.2 X 0.2 X 0.1) + (0.8 X 0.6) + (0.8 X 0.4 X 0.8) + (0.8 X 0.4 X 0.2 X 0.1)  = 0.90```
-# MAGIC 
+# MAGIC
 # MAGIC Now, let's calculate the removal effect for one of our channels: Facebook/Social. For this, we will set the conversion for Facebook/Social to 0% and then recalculate the total conversion probability. Now we have `0.48`.
-# MAGIC 
+# MAGIC
 # MAGIC ```P(Conversion) = (0.2 X 0.0) + (0.2 X 0.0 X 0.1) + (0.8 X 0.6) + (0.8 X 0.4 X 0) +(0.8 X 0.4 X 0.0 X 0.1)  = 0.48```
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC <div style="text-align: left">
 # MAGIC   <img src="https://cme-solution-accelerators-images.s3.us-west-2.amazonaws.com/multi-touch-attribution/mta-dag-2.png"; width="60%">
 # MAGIC </div>
-# MAGIC 
+# MAGIC
 # MAGIC With these two probabilities, we can now calculate the removal effect for Facebook/Social. The removal effect can be calculated as the difference between the total conversion probability (with all channels) and the conversion probability when the conversion for Facebook/Social is set to 0%.
-# MAGIC 
+# MAGIC
 # MAGIC ```Removal Effect(Facebook/ Social media) = 0.90 - 0.48 = 0.42```
-# MAGIC 
+# MAGIC
 # MAGIC Similarly, we can calculate the removal effect for each of the other channels and calculate attribution accordingly.
-# MAGIC 
+# MAGIC
 # MAGIC An excellent visual explanation of Markov Chains is available in this [article](https://setosa.io/ev/markov-chains/).
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ##Step 1: Configure the Environment
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC 1. Import libraries
 # MAGIC 2. Run the utils notebook to gain access to the get_params function
@@ -124,6 +124,7 @@ import matplotlib.pyplot as plt
 
 params = get_params()
 project_directory = params['project_directory']
+catalog_name = params['catalog_name']
 database_name = params['database_name']
 
 # COMMAND ----------
@@ -134,15 +135,16 @@ database_name = params['database_name']
 
 # COMMAND ----------
 
-_ = spark.sql("use {}".format(database_name))
+_ = spark.sql("use catalog {}".format(catalog_name))
+_ = spark.sql("use schema {}".format(database_name))
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Step 2: Construct the Transition Probability Matrix
-# MAGIC 
+# MAGIC
 # MAGIC As discussed above, the transition probability matrix contains the probabilities associated with moving from one state to another state. This is calculated using the data from all customer journeys.
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC 1. Define a user-defined function (UDF), `get_transition_array`, that takes a customer journey and enumerates each of the corresponding channel transitions
 # MAGIC 2. Register the `get_transition_array` udf as a Spark UDF so that it can be utilized in Spark SQL
@@ -383,7 +385,7 @@ def calculate_conversion_probability(transition_probability_pandas_df, calculate
   else:
   #Calculate the conversion probability of the new current state
     #Add current_state to visited_states
-    visited_states.add(current_state)
+    visited_states.add(current_state) # e.g. if "Start" has been visited, then all its next stages has been added
     
     #Get all of the transition probabilities from the current state to all of the possible next states
     current_state_transition_df = transition_probability_pandas_df.loc[transition_probability_pandas_df.start_state==current_state]
@@ -425,7 +427,7 @@ total_conversion_probability
 
 # MAGIC %md
 # MAGIC ### Step 4: Use Removal Effect to Calculate Attribution
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC 1. Calculate the removal effect per channel
 # MAGIC 2. Calculate conversion attribution per channel
@@ -526,7 +528,7 @@ sns.catplot(x='channel',y='attribution_percent',hue='attribution_model',data=att
 
 # MAGIC %md
 # MAGIC Copyright Databricks, Inc. [2021]. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source).  All included or referenced third party libraries are subject to the licenses set forth below.
-# MAGIC 
+# MAGIC
 # MAGIC |Library Name|Library license | Library License URL | Library Source URL |
 # MAGIC |---|---|---|---|
 # MAGIC |Matplotlib|Python Software Foundation (PSF) License |https://matplotlib.org/stable/users/license.html|https://github.com/matplotlib/matplotlib|

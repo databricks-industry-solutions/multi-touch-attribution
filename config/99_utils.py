@@ -8,6 +8,7 @@ def get_params():
   import json
   params = json.loads(dbutils.notebook.run('./config/99_config',timeout_seconds=60))
   project_directory = params['project_directory']
+  catalog_name = params['catalog_name']
   database_name = params['database_name']
   data_gen_path = "/dbfs{}/raw/attribution_data.csv".format(project_directory)
   raw_data_path = "dbfs:{}/raw".format(project_directory)
@@ -17,6 +18,7 @@ def get_params():
   gold_ad_spend_tbl_path = "dbfs:{}/gold_ad_spend".format(project_directory)
 
   params = {"project_directory": project_directory,
+            "catalog_name": catalog_name,
             "database_name": database_name,
             "data_gen_path": data_gen_path,
             "raw_data_path": raw_data_path,
@@ -34,6 +36,7 @@ def reset_workspace(reset_flag="False"):
   params = get_params()
   project_directory = params['project_directory']
   database_name = params['database_name']
+  catalog_name = params['catalog_name']
   raw_data_path = params['raw_data_path']
   
   if reset_flag == "True":
@@ -43,8 +46,10 @@ def reset_workspace(reset_flag="False"):
     dbutils.fs.mkdirs(raw_data_path)
     
     # Replace existing database with new one
-    spark.sql("DROP DATABASE IF EXISTS " +database_name+ " CASCADE")
-    spark.sql("CREATE DATABASE " + database_name)
+    spark.sql("DROP CATALOG IF EXISTS " +catalog_name+ " CASCADE")
+    spark.sql("DROP SCHEMA IF EXISTS " +catalog_name + '.' + database_name+ " CASCADE")
+    spark.sql("CREATE CATALOG " + catalog_name)
+    spark.sql("CREATE SCHEMA " +catalog_name + '.' + database_name)
   elif dbutils.fs.ls(raw_data_path) == False:
     dbutils.fs.mkdirs(raw_data_path)
   return None

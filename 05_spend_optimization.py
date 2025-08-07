@@ -13,7 +13,7 @@
 
 # MAGIC %md
 # MAGIC ## Overview
-# MAGIC 
+# MAGIC
 # MAGIC ### In this notebook you:
 # MAGIC * Build a dashboard to visualize the current state of a given campaign and to inform marketing budget reallocation decisions.
 
@@ -21,7 +21,7 @@
 
 # MAGIC %md
 # MAGIC ## Step 1: Configure the Environment
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC   1. Import libraries
 # MAGIC   2. Run the `utils` notebook to gain access to the functions `get_params`
@@ -55,9 +55,9 @@ sns.set(font_scale = 1.4)
 
 # MAGIC %md
 # MAGIC ##### 1.3: `get_params` and store values in variables
-# MAGIC 
+# MAGIC
 # MAGIC * Three of the parameters returned by `get_params` are used in this notebook. For convenience, we will store the values for these parameters in new variables. 
-# MAGIC 
+# MAGIC
 # MAGIC   * **database_name:** the name of the database created in notebook `02_load_data`. The default value can be overridden in the notebook `99_config`
 # MAGIC   * **gold_user_journey_tbl_path:** the path used in `03_load_data` to write out gold-level user journey data in delta format.
 # MAGIC   * **gold_attribution_tbl_path:** the path used in `03_load_data` to write out gold-level attribution data in delta format.
@@ -65,6 +65,7 @@ sns.set(font_scale = 1.4)
 # COMMAND ----------
 
 params = get_params()
+catalog_name = params['catalog_name']
 database_name = params['database_name']
 gold_user_journey_tbl_path = params['gold_user_journey_tbl_path']
 gold_attribution_tbl_path = params['gold_attribution_tbl_path']
@@ -78,7 +79,8 @@ gold_ad_spend_tbl_path = params['gold_ad_spend_tbl_path']
 
 # COMMAND ----------
 
-_ = spark.sql("use {}".format(database_name))
+_ = spark.sql("use catalog {}".format(catalog_name))
+_ = spark.sql("use schema {}".format(database_name))
 
 # COMMAND ----------
 
@@ -97,15 +99,13 @@ _ = spark.sql("use {}".format(database_name))
 
 # COMMAND ----------
 
-_ = spark.sql('''
-  CREATE OR REPLACE TABLE gold_ad_spend (
-    campaign_id STRING, 
-    total_spend_in_dollars FLOAT, 
-    channel_spend MAP<STRING, FLOAT>, 
-    campaign_start_date TIMESTAMP)
-  USING DELTA
-  LOCATION '{}'
-  '''.format(gold_ad_spend_tbl_path))
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE gold_ad_spend (
+# MAGIC     campaign_id STRING, 
+# MAGIC     total_spend_in_dollars FLOAT, 
+# MAGIC     channel_spend MAP<STRING, FLOAT>, 
+# MAGIC     campaign_start_date TIMESTAMP)
+# MAGIC   USING DELTA
 
 # COMMAND ----------
 
@@ -130,7 +130,7 @@ dbutils.widgets.text("adspend", "10000", "Campaign Budget in $")
 
 # MAGIC %sql
 # MAGIC INSERT INTO TABLE gold_ad_spend
-# MAGIC VALUES ("3d65f7e92e81480cac52a20dfdf64d5b", $adspend,
+# MAGIC VALUES ("3d65f7e92e81480cac52a20dfdf64d5b", :adspend,
 # MAGIC           MAP('Social Network', .2,
 # MAGIC               'Search Engine Marketing', .2,  
 # MAGIC               'Google Display Network', .2, 
@@ -306,21 +306,21 @@ plt.title("Channel Cost per Acquisition");
 # MAGIC %md
 # MAGIC ## Step 4: Budget Allocation Optimization.
 # MAGIC Now that we have assigned credit to our marketing channels using Markov Chains, we can take a data-driven approach for budget allocation.
-# MAGIC 
+# MAGIC
 # MAGIC * One KPI we can take a look at is Return on Ad Spend (ROAS).
 # MAGIC * In the ecommerce world, ROAS is calculated as: <br>
 # MAGIC ``ROAS = Revenue $ from marketing/ Advertising $ spent``
-# MAGIC 
+# MAGIC
 # MAGIC In our example, instead of working with exact $ values, we will divide the % of conversion attributed to a channel by the % of total adspend allocated to that channel.
 # MAGIC * ``ROAS = CHANNEL CONVERSION WEIGHT / CHANNEL BUDGET WEIGHT``
 # MAGIC   * ROAS value > 1 signifies that the channel has been allocated less budget than warranted by its conversion rate.
 # MAGIC   * ROAS value < 1 signifies that the channel has been allocated more budget than warranted by its conversion rate.
 # MAGIC   * ROAS value = 1 signifies and optimized budget allocation. 
-# MAGIC 
+# MAGIC
 # MAGIC From ROAS, we can calculate the Proposed Budget for each channel <br>
 # MAGIC * ``Proposed budget =  Current budget X ROAS``
 # MAGIC <br>
-# MAGIC 
+# MAGIC
 # MAGIC To calculate ROAS we will join the following Delta Tables:
 # MAGIC * **gold_attribution:** This table contains the calculated attribution % per channel based on different attribution models.
 # MAGIC * **exploded_gold_ad_spend:** This table contains the current budget allocated per channel. The column pct_spend documents the % of the total budget that has been allocated to a given channel. 
@@ -389,7 +389,7 @@ plt.xlabel("Channels")
 
 # MAGIC %md
 # MAGIC Copyright Databricks, Inc. [2021]. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source).  All included or referenced third party libraries are subject to the licenses set forth below.
-# MAGIC 
+# MAGIC
 # MAGIC |Library Name|Library license | Library License URL | Library Source URL |
 # MAGIC |---|---|---|---|
 # MAGIC |Matplotlib|Python Software Foundation (PSF) License |https://matplotlib.org/stable/users/license.html|https://github.com/matplotlib/matplotlib|

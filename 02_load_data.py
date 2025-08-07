@@ -13,7 +13,7 @@
 
 # MAGIC %md
 # MAGIC ## Overview
-# MAGIC 
+# MAGIC
 # MAGIC ### In this notebook you:
 # MAGIC * Use `Databricks Autoloader` to import the ad impression and conversion data generated in the notebook `01_intro`.
 # MAGIC * Write the data out in `Delta` format.
@@ -23,7 +23,7 @@
 
 # MAGIC %md
 # MAGIC ## Step 1: Configure the Environment
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC   1. Import libraries
 # MAGIC   2. Run `utils` notebook to gain access to the function `get_params`
@@ -63,6 +63,7 @@ import time
 # COMMAND ----------
 
 params = get_params()
+catalog_name = params['catalog_name']
 database_name = params['database_name']
 raw_data_path = params['raw_data_path']
 bronze_tbl_path = params['bronze_tbl_path']
@@ -71,7 +72,7 @@ bronze_tbl_path = params['bronze_tbl_path']
 
 # MAGIC %md
 # MAGIC ## Step 2: Load Data using Databricks Auto Loader
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we will:
 # MAGIC   1. Define the schema of the synthetic data generated in `01_load_data`
 # MAGIC   2. Read the synthetic data into a dataframe using Auto Loader
@@ -82,9 +83,9 @@ bronze_tbl_path = params['bronze_tbl_path']
 # MAGIC %md 
 # MAGIC But, what is Auto Loader?
 # MAGIC * Auto Loader incrementally and efficiently loads new data files as they arrive in [S3](https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html) or [Azure Blog Storage](https://docs.microsoft.com/en-us/azure/databricks/spark/latest/structured-streaming/auto-loader). This is enabled by providing a Structured Streaming source called `cloudFiles`. 
-# MAGIC 
+# MAGIC
 # MAGIC * Auto Loader internally keeps tracks of what files have been processed to provide exactly-once semantics, so you do not need to manage any state information yourself.
-# MAGIC 
+# MAGIC
 # MAGIC * Auto Loader supports two modes for detecting when new files arrive:
 # MAGIC   
 # MAGIC   * `Directory listing:` Identifies new files by parallel listing of the input directory. Quick to get started since no permission configurations are required. Suitable for scenarios where only a few files need to be streamed in on a regular basis.
@@ -118,7 +119,7 @@ raw_data_df = spark.readStream.format("cloudFiles") \
             .option("cloudFiles.region", "us-west-2") \
             .option("cloudFiles.includeExistingFiles", "true") \
             .schema(schema) \
-            .load(raw_data_path) 
+            .load(raw_data_path)
 
 # COMMAND ----------
 
@@ -134,12 +135,12 @@ raw_data_df = raw_data_df.withColumn("time", to_timestamp(col("time"),"yyyy-MM-d
 
 # MAGIC %md
 # MAGIC ## Step 3: Write Data to Delta Lake
-# MAGIC 
+# MAGIC
 # MAGIC In this section of the solution accelerator, we write our data out to [Delta Lake](https://delta.io/) and then create a table (and database) for easy access and queryability.
-# MAGIC 
+# MAGIC
 # MAGIC * Delta Lake is an open-source project that enables building a **Lakehouse architecture** on top of existing storage systems such as S3, ADLS, GCS, and HDFS.
 # MAGIC    * Information on the **Lakehouse Architecture** can be found in this [paper](http://cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf) that was presented at [CIDR 2021](http://cidrdb.org/cidr2021/index.html) and in this [video](https://www.youtube.com/watch?v=RU2dXoVU8hY)
-# MAGIC 
+# MAGIC
 # MAGIC * Key features of Delta Lake include:
 # MAGIC   * **ACID Transactions**: Ensures data integrity and read consistency with complex, concurrent data pipelines.
 # MAGIC   * **Unified Batch and Streaming Source and Sink**: A table in Delta Lake is both a batch table, as well as a streaming source and sink. Streaming data ingest, batch historic backfill, and interactive queries all just work out of the box. 
@@ -157,58 +158,14 @@ raw_data_df = raw_data_df.withColumn("time", to_timestamp(col("time"),"yyyy-MM-d
 
 # COMMAND ----------
 
+dbutils.fs.rm(bronze_tbl_path+"/checkpoint", recurse=True)
+
+# COMMAND ----------
+
 raw_data_df.writeStream.format("delta") \
-  .trigger(once=True) \
+  .trigger(availableNow=True) \
   .option("checkpointLocation", bronze_tbl_path+"/checkpoint") \
-  .start(bronze_tbl_path) \
-  .awaitTermination()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Step 4: Create Database
-
-# COMMAND ----------
-
-# Delete the old database and tables if needed
-_ = spark.sql('DROP DATABASE IF EXISTS {} CASCADE'.format(database_name))
-
-# Create database to house tables
-_ = spark.sql('CREATE DATABASE {}'.format(database_name))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Step 5: Create bronze-level table in Delta format
-# MAGIC 
-# MAGIC * **Note:** this step will produce an exception if it is run before writeStream in step 3 is initialized.
-# MAGIC 
-# MAGIC * The nomenclature of bronze, silver, and gold tables correspond with a commonly used data modeling approach known as multi-hop architecture. 
-# MAGIC   * Additional information about this pattern can be found [here](https://databricks.com/blog/2019/08/14/productionizing-machine-learning-with-delta-lake.html).
-
-# COMMAND ----------
-
-# Create bronze table
-_ = spark.sql('''
-  CREATE TABLE `{}`.bronze
-  USING DELTA 
-  LOCATION '{}'
-  '''.format(database_name,bronze_tbl_path))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Step 6: View the bronze table
-# MAGIC 
-# MAGIC Using `spark.table` here enables use of Python. An alternative approach is to query the data directly using SQL. This will be shown in the `03_data_prep` notebook.
-
-# COMMAND ----------
-
-bronze_tbl = spark.table("{}.bronze".format(database_name))
-
-# COMMAND ----------
-
-display(bronze_tbl)
+  .toTable(f"{catalog_name}.{database_name}.bronze")
 
 # COMMAND ----------
 
@@ -220,7 +177,7 @@ display(bronze_tbl)
 
 # MAGIC %md
 # MAGIC Copyright Databricks, Inc. [2021]. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source).  All included or referenced third party libraries are subject to the licenses set forth below.
-# MAGIC 
+# MAGIC
 # MAGIC |Library Name|Library license | Library License URL | Library Source URL |
 # MAGIC |---|---|---|---|
 # MAGIC |Matplotlib|Python Software Foundation (PSF) License |https://matplotlib.org/stable/users/license.html|https://github.com/matplotlib/matplotlib|
